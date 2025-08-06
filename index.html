@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Setting Dashboard</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .goal-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 1.5rem;
+            height: 100%;
+        }
+        
+        .goal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        .short-term {
+            border-top: 5px solid #4CAF50;
+        }
+        
+        .medium-term {
+            border-top: 5px solid #FFC107;
+        }
+        
+        .long-term {
+            border-top: 5px solid #2196F3;
+        }
+        
+        .card-header {
+            font-weight: 600;
+            font-size: 1.2rem;
+            border-bottom: none;
+        }
+        
+        .goal-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .goal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .goal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .form-control {
+            border-radius: 8px;
+        }
+        
+        .btn-add {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-container input {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        
+        .progress-container {
+            margin-top: 1rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #6c757d;
+            padding: 2rem;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .date-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .date-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            margin-left: 5px;
+        }
+        
+        .goal-details {
+            margin-top: 8px;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .sync-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .sync-success {
+            background-color: #4CAF50;
+        }
+        
+        .sync-error {
+            background-color: #f44336;
+        }
+        
+        .sync-progress {
+            background-color: #2196F3;
+        }
+        
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .settings-panel.open {
+            right: 0;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .goal-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .goal-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="header text-center">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1><i class="bi bi-rocket-takeoff"></i> Goal Setting Dashboard</h1>
+                        <button class="btn btn-outline-light btn-sm" id="settings-btn">
+                            <i class="bi bi-gear"></i> Settings
+                        </button>
+                    </div>
+                    <p class="mb-0">Set and track your short, medium, and long-term goals to achieve success</p>
+                </div>
+                
+                <div class="row">
+                    <!-- Short Term Goals -->
+                    <div class="col-12 col-md-4 mb-4">
+                        <div class="card goal-card short-term">
+                            <div class="card-header text-white" style="background-color: #4CAF50;">
+                                <i class="bi bi-alarm"></i> Short-Term Goals
+                                <span class="badge bg-light text-dark float-end" id="short-term-count">0</span>
+                            </div>
+                            <div class="card-body">
+                                <button class="btn btn-success btn-add w-100 mb-3" type="button" data-bs-toggle="modal" data-bs-target="#addGoalModal" data-goal-type="short-term">
+                                    <i class="bi bi-plus"></i> Add New Goal
+                                </button>
+                                
+                                <div id="short-term-goals" class="goal-list">
+                                    <div class="empty-state" id="short-term-empty">
+                                        <i class="bi bi-clipboard"></i>
+                                        <p>No short-term goals yet</p>
+                                    </div>
+                                    <!-- Goals will be added here -->
+                                </div>
+                                
+                                <div class="progress-container">
+                                    <div class="d-flex justify-content-between">
+                                        <small>Progress</small>
+                                        <small id="short-term-progress">0%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" id="short-term-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Medium Term Goals -->
+                    <div class="col-12 col-md-4 mb-4">
+                        <div class="card goal-card medium-term">
+                            <div class="card-header text-white" style="background-color: #FFC107;">
+                                <i class="bi bi-calendar-week"></i> Medium-Term Goals
+                                <span class="badge bg-light text-dark float-end" id="medium-term-count">0</span>
+                            </div>
+                            <div class="card-body">
+                                <button class="btn btn-warning btn-add w-100 mb-3 text-white" type="button" data-bs-toggle="modal" data-bs-target="#addGoalModal" data-goal-type="medium-term">
+                                    <i class="bi bi-plus"></i> Add New Goal
+                                </button>
+                                
+                                <div id="medium-term-goals" class="goal-list">
+                                    <div class="empty-state" id="medium-term-empty">
+                                        <i class="bi bi-clipboard"></i>
+                                        <p>No medium-term goals yet</p>
+                                    </div>
+                                    <!-- Goals will be added here -->
+                                </div>
+                                
+                                <div class="progress-container">
+                                    <div class="d-flex justify-content-between">
+                                        <small>Progress</small>
+                                        <small id="medium-term-progress">0%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar" style="background-color: #FFC107; width: 0%" id="medium-term-bar"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Long Term Goals -->
+                    <div class="col-12 col-md-4 mb-4">
+                        <div class="card goal-card long-term">
+                            <div class="card-header text-white" style="background-color: #2196F3;">
+                                <i class="bi bi-calendar-year"></i> Long-Term Goals
+                                <span class="badge bg-light text-dark float-end" id="long-term-count">0</span>
+                            </div>
+                            <div class="card-body">
+                                <button class="btn btn-primary btn-add w-100 mb-3" type="button" data-bs-toggle="modal" data-bs-target="#addGoalModal" data-goal-type="long-term">
+                                    <i class="bi bi-plus"></i> Add New Goal
+                                </button>
+                                
+                                <div id="long-term-goals" class="goal-list">
+                                    <div class="empty-state" id="long-term-empty">
+                                        <i class="bi bi-clipboard"></i>
+                                        <p>No long-term goals yet</p>
+                                    </div>
+                                    <!-- Goals will be added here -->
+                                </div>
+                                
+                                <div class="progress-container">
+                                    <div class="d-flex justify-content-between">
+                                        <small>Progress</small>
+                                        <small id="long-term-progress">0%</small>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" id="long-term-bar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sync Status -->
+                <div id="sync-status" class="sync-status" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status" id="sync-spinner"></div>
+                        <span id="sync-message">Syncing with Google Sheets...</span>
+                    </div>
+                </div>
+                
+                <!-- Motivational Quote -->
+                <div class="text-center mt-4">
+                    <blockquote class="blockquote">
+                        <p>"The future depends on what you do today." - Mahatma Gandhi</p>
+                    </blockquote>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Goal Modal -->
+    <div class="modal fade" id="addGoalModal" tabindex="-1" aria-labelledby="addGoalModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addGoalModalLabel">Add New Goal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="goal-type">
+                    <div class="row">
+                        <div class="col-12">
+                            <label for="goal-text" class="form-label">Goal Description</label>
+                            <textarea class="form-control" id="goal-text" rows="3" placeholder="What do you want to achieve?"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label for="start-date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start-date">
+                        </div>
+                        <div class="col-6">
+                            <label for="end-date" class="form-label">Target Date</label>
+                            <input type="date" class="form-control" id="end-date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-goal">Add Goal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settings-panel">
+        <div class="settings-header">
+            <h5>Settings</h5>
+            <button class="btn btn-sm btn-outline-secondary" id="close-settings">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <h6>Google Sheets Integration</h6>
+            <p class="text-muted">Connect your Google account to sync goals with Google Sheets</p>
+            
+            <div class="mb-3">
+                <label for="google-sheet-id" class="form-label">Google Sheet ID</label>
+                <input type="text" class="form-control" id="google-sheet-id" placeholder="1Bdi...aXv">
+                <div class="form-text">
+                    Find this in your Google Sheet URL: docs.google.com/spreadsheets/d/<strong>[THIS_IS_THE_ID]</strong>/edit
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="worksheet-name" class="form-label">Worksheet Name</label>
+                <input type="text" class="form-control" id="worksheet-name" value="Goals">
+                <div class="form-text">Name of the worksheet tab in your Google Sheet</div>
+            </div>
+            
+            <button class="btn btn-success w-100 mb-3" id="connect-google">
+                <i class="bi bi-google"></i> Connect to Google
+            </button>
+            
+            <div class="alert alert-info" id="google-status">
+                Not connected. Enter your Sheet ID and click "Connect to Google" to enable syncing.
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <h6>Data Management</h6>
+            <button class="btn btn-outline-primary w-100 mb-2" id="sync-now">
+                <i class="bi bi-arrow-clockwise"></i> Sync Now
+            </button>
+            <button class="btn btn-outline-secondary w-100 mb-2" id="download-local">
+                <i class="bi bi-download"></i> Download Local Backup
+            </button>
+            <button class="btn btn-outline-secondary w-100 mb-2" id="upload-local">
+                <i class="bi bi-upload"></i> Upload Local Backup
+                <input type="file" id="backup-file" style="display: none;">
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <h6>About</h6>
+            <p class="text-muted small">
+                This app syncs your goals with Google Sheets using Google Apps Script as a middleware.
+                Your data is stored securely in your own Google account.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        let isGoogleConnected = false;
+        let sheetId = '';
+        let worksheetName = 'Goals';
+        let syncInterval;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load settings from localStorage
+            loadSettings();
+            
+            // Initialize the app
+            initApp();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Start periodic sync if connected
+            if (isGoogleConnected && sheetId) {
+                startSync();
+            }
+        });
+        
+        function initApp() {
+            // Load goals from localStorage
+            loadGoals();
+            
+            // Update UI based on connection status
+            updateConnectionStatus();
+            
+            // Set up modal event
+            const addGoalModal = document.getElementById('addGoalModal');
+            addGoalModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const goalType = button.getAttribute('data-goal-type');
+                const modal = this;
+                
+                modal.querySelector('#goal-type').value = goalType;
+                
+                // Set default dates
+                const today = new Date().toISOString().split('T')[0];
+                const targetDateInput = modal.querySelector('#end-date');
+                
+                let futureDate;
+                if (goalType === 'short-term') {
+                    futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 7);
+                } else if (goalType === 'medium-term') {
+                    futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 30);
+                } else { // long-term
+                    futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 90);
+                }
+                
+                modal.querySelector('#start-date').value = today;
+                targetDateInput.value = futureDate.toISOString().split('T')[0];
+            });
+            
+            // Save goal button event
+            document.getElementById('save-goal').addEventListener('click', function() {
+                const goalType = document.getElementById('goal-type').value;
+                const goalText = document.getElementById('goal-text').value.trim();
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                if (goalText === '') {
+                    alert('Please enter a goal description');
+                    return;
+                }
+                
+                if (!startDate || !endDate) {
+                    alert('Please select both start and target dates');
+                    return;
+                }
+                
+                if (new Date(endDate) <= new Date(startDate)) {
+                    alert('Target date must be after the start date');
+                    return;
+                }
+                
+                addGoal(goalType, goalText, startDate, endDate);
+                
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addGoalModal'));
+                modal.hide();
+                
+                document.getElementById('goal-text').value = '';
+                
+                // Sync with Google Sheets if connected
+                if (isGoogleConnected && sheetId) {
+                    showSyncStatus('Syncing with Google Sheets...', 'progress');
+                    syncWithGoogleSheets();
+                }
+            });
+            
+            // Update time remaining for all goals
+            updateAllTimeRemaining();
+            
+            // Update every minute
+            setInterval(updateAllTimeRemaining, 60000);
+        }
+        
+        function setupEventListeners() {
+            // Settings panel
+            document.getElementById('settings-btn').addEventListener('click', function() {
+                document.getElementById('settings-panel').classList.add('open');
+                document.getElementById('overlay').classList.add('active');
+            });
+            
+            document.getElementById('close-settings').addEventListener('click', function() {
+                document.getElementById('settings-panel').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+            
+            document.getElementById('overlay').addEventListener('click', function() {
+                document.getElementById('settings-panel').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            });
+            
+            // Google integration
+            document.getElementById('connect-google').addEventListener('click', connectToGoogle);
+            document.getElementById('sync-now').addEventListener('click', manualSync);
+            document.getElementById('download-local').addEventListener('click', downloadLocalBackup);
+            
+            document.getElementById('upload-local').addEventListener('click', function() {
+                document.getElementById('backup-file').click();
+            });
+            
+            document.getElementById('backup-file').addEventListener('change', handleFileUpload);
+            
+            // Settings inputs
+            document.getElementById('google-sheet-id').addEventListener('change', function() {
+                sheetId = this.value.trim();
+                saveSettings();
+            });
+            
+            document.getElementById('worksheet-name').addEventListener('change', function() {
+                worksheetName = this.value.trim();
+                saveSettings();
+            });
+        }
+        
+        function addGoal(type, text, startDate, endDate) {
+            const goalsContainer = document.getElementById(`${type}-goals`);
+            const emptyState = document.getElementById(`${type}-empty`);
+            
+            // Hide empty state if it's visible
+            if (emptyState.style.display !== 'none') {
+                emptyState.style.display = 'none';
+            }
+            
+            // Create new goal item
+            const goalItem = document.createElement('div');
+            goalItem.className = 'goal-item';
+            goalItem.dataset.startDate = startDate;
+            goalItem.dataset.endDate = endDate;
+            // We'll add a data-id once we get it from Google Sheets
+            goalItem.dataset.localId = 'local_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            
+            // Format dates for display
+            const startFormatted = new Date(startDate).toLocaleDateString();
+            const endFormatted = new Date(endDate).toLocaleDateString();
+            
+            goalItem.innerHTML = `
+                <div class="goal-header">
+                    <div class="checkbox-container">
+                        <input type="checkbox" class="form-check-input" onchange="toggleGoalCompletion(this)">
+                        <span>${text}</span>
+                    </div>
+                    <div class="goal-actions">
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeGoal(this.parentElement.parentElement.parentElement)">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="goal-details">
+                    <div class="date-info">
+                        <i class="bi bi-calendar"></i> 
+                        <span>Start: ${startFormatted}</span>
+                        <span class="date-badge bg-secondary">Target: ${endFormatted}</span>
+                    </div>
+                    <div class="date-info mt-1">
+                        <i class="bi bi-hourglass-split"></i> 
+                        <span id="time-remaining-${goalItem.dataset.localId}"></span>
+                    </div>
+                </div>
+            `;
+            
+            goalsContainer.appendChild(goalItem);
+            
+            // Calculate and display time remaining
+            updateTimeRemaining(goalItem);
+            
+            // Update counts and progress
+            updateCountsAndProgress();
+            saveGoals();
+            
+            // If connected to Google, sync the new goal
+            if (isGoogleConnected && sheetId) {
+                showSyncStatus('Adding new goal to Google Sheets...', 'progress');
+                syncWithGoogleSheets();
+            }
+        }
+        
+        function updateAllTimeRemaining() {
+            document.querySelectorAll('.goal-item').forEach(goalItem => {
+                updateTimeRemaining(goalItem);
+            });
+        }
+        
+        function updateTimeRemaining(goalItem) {
+            const endDate = new Date(goalItem.dataset.endDate);
+            const now = new Date();
+            const timeDiff = endDate - now;
+            
+            // Skip if goal is already completed
+            const checkbox = goalItem.querySelector('input[type="checkbox"]');
+            if (checkbox && checkbox.checked) {
+                const timeRemainingSpan = goalItem.querySelector('.date-info:last-child span');
+                if (timeRemainingSpan) {
+                    timeRemainingSpan.textContent = 'Goal completed!';
+                    timeRemainingSpan.style.color = '#4CAF50';
+                }
+                return;
+            }
+            
+            // If target date has passed
+            if (timeDiff <= 0) {
+                const timeRemainingSpan = goalItem.querySelector('.date-info:last-child span');
+                if (timeRemainingSpan) {
+                    timeRemainingSpan.textContent = 'Target date passed';
+                    timeRemainingSpan.style.color = '#d32f2f';
+                }
+                return;
+            }
+            
+            // Calculate time remaining
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeText;
+            if (days >= 1) {
+                timeText = `${days} day${days > 1 ? 's' : ''} remaining`;
+            } else {
+                timeText = `${hours}h ${minutes}m remaining`;
+            }
+            
+            const timeRemainingSpan = goalItem.querySelector('.date-info:last-child span');
+            if (timeRemainingSpan) {
+                timeRemainingSpan.textContent = timeText;
+                
+                // Color coding based on urgency
+                if (days < 1) {
+                    timeRemainingSpan.style.color = '#d32f2f'; // Red for less than 1 day
+                } else if (days < 3) {
+                    timeRemainingSpan.style.color = '#FF8F00'; // Orange for less than 3 days
+                } else {
+                    timeRemainingSpan.style.color = '#2196F3'; // Blue for more than 3 days
+                }
+            }
+        }
+        
+        // Function to toggle goal completion
+        window.toggleGoalCompletion = function(checkbox) {
+            const span = checkbox.parentElement.querySelector('span');
+            if (checkbox.checked) {
+                span.classList.add('completed');
+            } else {
+                span.classList.remove('completed');
+            }
+            
+            // Update time remaining display
+            const goalItem = checkbox.closest('.goal-item');
+            updateTimeRemaining(goalItem);
+            
+            updateCountsAndProgress();
+            saveGoals();
+            
+            // Sync with Google Sheets if connected
+            if (isGoogleConnected && sheetId) {
+                showSyncStatus('Updating goal in Google Sheets...', 'progress');
+                syncWithGoogleSheets();
+            }
+        };
+        
+        // Function to remove a goal
+        window.removeGoal = function(goalElement) {
+            const localId = goalElement.dataset.localId;
+            
+            goalElement.remove();
+            
+            // Check if list is empty
+            const parent = goalElement.parentElement;
+            const emptyStateId = parent.id.replace('goals', 'empty');
+            const emptyState = document.getElementById(emptyStateId);
+            
+            if (parent.children.length === 1) { // Only the empty state remains
+                emptyState.style.display = 'block';
+            }
+            
+            updateCountsAndProgress();
+            saveGoals();
+            
+            // Sync with Google Sheets if connected
+            if (isGoogleConnected && sheetId) {
+                showSyncStatus('Removing goal from Google Sheets...', 'progress');
+                syncWithGoogleSheets();
+            }
+        };
+        
+        function updateCountsAndProgress() {
+            const types = ['short-term', 'medium-term', 'long-term'];
+            
+            types.forEach(type => {
+                const goalsContainer = document.getElementById(`${type}-goals`);
+                const goalItems = goalsContainer.getElementsByClassName('goal-item');
+                const completedItems = goalsContainer.getElementsByClassName('completed');
+                
+                const count = goalItems.length;
+                const completedCount = completedItems.length;
+                
+                // Update count badge
+                document.getElementById(`${type}-count`).textContent = count;
+                
+                // Update progress
+                const progress = count === 0 ? 0 : Math.round((completedCount / count) * 100);
+                document.getElementById(`${type}-progress`).textContent = `${progress}%`;
+                document.getElementById(`${type}-bar`).style.width = `${progress}%`;
+            });
+        }
+        
+        function saveGoals() {
+            const types = ['short-term', 'medium-term', 'long-term'];
+            const allGoals = {};
+            
+            types.forEach(type => {
+                const goalsContainer = document.getElementById(`${type}-goals`);
+                const goalItems = goalsContainer.getElementsByClassName('goal-item');
+                const goals = [];
+                
+                for (let item of goalItems) {
+                    const span = item.querySelector('span');
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    const isCompleted = checkbox.checked;
+                    
+                    // Only include text nodes, not the checkbox
+                    let goalText = '';
+                    for (let child of checkbox.parentElement.childNodes) {
+                        if (child.nodeType === Node.TEXT_NODE) {
+                            goalText += child.textContent;
+                        } else if (child.nodeType === Node.ELEMENT_NODE && child.tagName === 'SPAN') {
+                            goalText += child.textContent;
+                        }
+                    }
+                    goalText = goalText.trim();
+                    
+                    goals.push({
+                        text: goalText,
+                        completed: isCompleted,
+                        startDate: item.dataset.startDate,
+                        endDate: item.dataset.endDate,
+                        localId: item.dataset.localId,
+                        id: item.dataset.id || null  // ID from Google Sheets
+                    });
+                }
+                
+                allGoals[type] = goals;
+            });
+            
+            localStorage.setItem('goals', JSON.stringify(allGoals));
+        }
+        
+        function loadGoals() {
+            const savedGoals = localStorage.getItem('goals');
+            if (!savedGoals) return;
+            
+            const allGoals = JSON.parse(savedGoals);
+            const types = ['short-term', 'medium-term', 'long-term'];
+            
+            types.forEach(type => {
+                const goals = allGoals[type] || [];
+                const goalsContainer = document.getElementById(`${type}-goals`);
+                const emptyState = document.getElementById(`${type}-empty`);
+                
+                if (goals.length > 0) {
+                    emptyState.style.display = 'none';
+                    
+                    goals.forEach(goal => {
+                        const goalItem = document.createElement('div');
+                        goalItem.className = 'goal-item';
+                        goalItem.dataset.startDate = goal.startDate;
+                        goalItem.dataset.endDate = goal.endDate;
+                        goalItem.dataset.localId = goal.localId;
+                        
+                        // If we have an ID from Google Sheets, use it
+                        if (goal.id) {
+                            goalItem.dataset.id = goal.id;
+                        }
+                        
+                        // Format dates for display
+                        const startFormatted = new Date(goal.startDate).toLocaleDateString();
+                        const endFormatted = new Date(goal.endDate).toLocaleDateString();
+                        
+                        goalItem.innerHTML = `
+                            <div class="goal-header">
+                                <div class="checkbox-container">
+                                    <input type="checkbox" class="form-check-input" ${goal.completed ? 'checked' : ''} onchange="toggleGoalCompletion(this)">
+                                    <span ${goal.completed ? 'class="completed"' : ''}>${goal.text}</span>
+                                </div>
+                                <div class="goal-actions">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeGoal(this.parentElement.parentElement.parentElement)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="goal-details">
+                                <div class="date-info">
+                                    <i class="bi bi-calendar"></i> 
+                                    <span>Start: ${startFormatted}</span>
+                                    <span class="date-badge bg-secondary">Target: ${endFormatted}</span>
+                                </div>
+                                <div class="date-info mt-1">
+                                    <i class="bi bi-hourglass-split"></i> 
+                                    <span id="time-remaining-${goal.localId}"></span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        goalsContainer.appendChild(goalItem);
+                    });
+                }
+            });
+            
+            updateCountsAndProgress();
+            updateAllTimeRemaining();
+        }
+        
+        // Google Sheets Integration Functions
+        function connectToGoogle() {
+            // In a real implementation, this would use Google's OAuth2 flow
+            // For this demo, we'll just validate the Sheet ID and set connected status
+            
+            const sheetIdInput = document.getElementById('google-sheet-id');
+            sheetId = sheetIdInput.value.trim();
+            worksheetName = document.getElementById('worksheet-name').value.trim() || 'Goals';
+            
+            if (!sheetId) {
+                alert('1ZXZ6uDZtnXSxUsi0Qka7UvoT2wz25XcTkwCnt1PAqls');
+                return;
+            }
+            
+            // In a real app, we would:
+            // 1. Redirect to Google OAuth consent screen
+            // 2. Handle the callback
+            // 3. Store the access token
+            // 4. Verify access to the sheet
+            
+            // For this demo, we'll simulate a successful connection
+            isGoogleConnected = true;
+            saveSettings();
+            
+            // Update UI
+            updateConnectionStatus();
+            showSyncStatus('Connected to Google Sheets! Syncing data...', 'success');
+            
+            // Start periodic sync
+            startSync();
+            
+            // Perform initial sync
+            syncWithGoogleSheets();
+        }
+        
+        function startSync() {
+            // Clear any existing interval
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+            
+            // Sync every 5 minutes
+            syncInterval = setInterval(function() {
+                if (isGoogleConnected && sheetId) {
+                    syncWithGoogleSheets();
+                }
+            }, 300000); // 5 minutes
+        }
+        
+        function manualSync() {
+            if (!isGoogleConnected || !sheetId) {
+                showSyncStatus('Please connect to Google Sheets first', 'error');
+                return;
+            }
+            
+            showSyncStatus('Syncing with Google Sheets...', 'progress');
+            syncWithGoogleSheets();
+        }
+        
+        function syncWithGoogleSheets() {
+    // First, get the Web App URL from your Google Apps Script deployment
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbxQraCv2HZAVi6sCZvLE8YxT2tPyp4mDtRV3aYGgEb_5UPKThsbnfhlzTI70pbjGlTIVg/exec'; // Replace with your actual URL
+    
+    if (!webAppUrl || webAppUrl.includes('YOUR_WEB_APP_URL_HERE')) {
+        showSyncStatus('Please update the webAppUrl in the code with your Google Apps Script URL', 'error');
+        return;
+    }
+    
+    try {
+        // Get local goals from localStorage
+        const localGoals = JSON.parse(localStorage.getItem('goals') || '{}');
+        
+        // Show syncing status
+        showSyncStatus('Syncing with Google Sheets...', 'progress');
+        
+        // Send data to Google Apps Script
+        fetch(webAppUrl + '?action=saveGoals', {
+            method: 'POST',
+            body: JSON.stringify(localGoals)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.status === 'success') {
+                // Update the last sync time in the UI
+                document.getElementById('google-status').innerHTML = 
+                    '<i class="bi bi-check-circle text-success"></i> Connected to Google Sheets! ' +
+                    'Last sync: ' + new Date().toLocaleTimeString();
+                
+                showSyncStatus('Successfully synced with Google Sheets!', 'success');
+            } else {
+                throw new Error(data?.message || 'Unknown error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Sync error:', error);
+            showSyncStatus('Sync failed: ' + error.message, 'error');
+            
+            // Update status to show connection issue
+            document.getElementById('google-status').innerHTML = 
+                '<i class="bi bi-exclamation-triangle text-warning"></i> Connection issue. Using local storage. ' +
+                'Check your internet connection and Google Apps Script URL.';
+        });
+        
+    } catch (error) {
+        console.error('Sync preparation error:', error);
+        showSyncStatus('Sync preparation failed: ' + error.message, 'error');
+    }
+}
+        
+        function showSyncStatus(message, type) {
+            const statusEl = document.getElementById('sync-status');
+            const spinner = document.getElementById('sync-spinner');
+            const messageEl = document.getElementById('sync-message');
+            
+            // Set message
+            messageEl.textContent = message;
+            
+            // Set type
+            statusEl.className = 'sync-status';
+            if (type === 'success') {
+                statusEl.classList.add('sync-success');
+                spinner.style.display = 'none';
+            } else if (type === 'error') {
+                statusEl.classList.add('sync-error');
+                spinner.style.display = 'none';
+            } else { // progress
+                statusEl.classList.add('sync-progress');
+                spinner.style.display = 'inline-block';
+            }
+            
+            // Show
+            statusEl.style.display = 'block';
+            
+            // Auto-hide success messages after 3 seconds
+            if (type === 'success') {
+                setTimeout(function() {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        function updateConnectionStatus() {
+            const statusEl = document.getElementById('google-status');
+            if (isGoogleConnected && sheetId) {
+                statusEl.innerHTML = 
+                    '<i class="bi bi-check-circle text-success"></i> Connected to Google Sheets! ' +
+                    'Last sync: ' + new Date().toLocaleTimeString();
+            } else {
+                statusEl.innerHTML = 
+                    '<i class="bi bi-x-circle text-danger"></i> Not connected. ' +
+                    'Enter your Sheet ID and click "Connect to Google" to enable syncing.';
+            }
+        }
+        
+        function saveSettings() {
+            const settings = {
+                isGoogleConnected,
+                sheetId,
+                worksheetName
+            };
+            localStorage.setItem('goalSettings', JSON.stringify(settings));
+        }
+        
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('goalSettings');
+            if (!savedSettings) return;
+            
+            const settings = JSON.parse(savedSettings);
+            isGoogleConnected = settings.isGoogleConnected || false;
+            sheetId = settings.sheetId || '';
+            worksheetName = settings.worksheetName || 'Goals';
+            
+            // Update UI elements
+            if (sheetId) {
+                document.getElementById('google-sheet-id').value = sheetId;
+            }
+            if (worksheetName) {
+                document.getElementById('worksheet-name').value = worksheetName;
+            }
+        }
+        
+        function downloadLocalBackup() {
+            // Create a backup of the current goals
+            const data = {
+                goals: localStorage.getItem('goals'),
+                settings: localStorage.getItem('goalSettings'),
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "goal-backup-" + new Date().toISOString().split('T')[0] + ".json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Restore data
+                    if (data.goals) {
+                        localStorage.setItem('goals', data.goals);
+                    }
+                    if (data.settings) {
+                        localStorage.setItem('goalSettings', data.settings);
+                    }
+                    
+                    // Reload the app
+                    location.reload();
+                    
+                    showSyncStatus('Backup restored successfully!', 'success');
+                } catch (error) {
+                    showSyncStatus('Failed to restore backup: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset the file input
+            event.target.value = null;
+        }
+    </script>
+</body>
+</html>
